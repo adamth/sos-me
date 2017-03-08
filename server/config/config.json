@@ -1,0 +1,12 @@
+{
+    "test": {
+        "PORT": 3000,
+        "MONGODB_URI": "mongodb://localhost:27017/SosMeTest",
+        "JWT_SECRET": "dksjfghn98s8dyfg98hsdfg09ujha" 
+    },
+    "development": {
+        "PORT": 3000,
+        "MONGODB_URI": "mongodb://localhost:27017/SosMeApp",
+        "JWT_SECRET": "sd9f8gh89s7dhfg8asd9f8ya9ds8dfhg9h" 
+    }
+}
