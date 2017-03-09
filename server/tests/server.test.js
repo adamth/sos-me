@@ -163,4 +163,13 @@ describe('DELETE /tags/:id', () => {
             }).catch((e) => done(e));
         })
     });
+
+    it('should not remove a tag with an invalid id', (done) => {
+        var id = new ObjectID();
+
+        request(app)
+        .delete(`/tags/${id}`)
+        .expect(404)
+        .end(done);
+    });
 });
