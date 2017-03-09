@@ -79,7 +79,26 @@ app.patch('/tags/:id', (req,res) => {
 });
 
 // DELETE tags
+app.delete('/tags/:id', (req,res) => {
+    var id = req.params.id;
 
+    if(!ObjectID.isValid(id))
+    {
+        return res.sendStatus(404);
+    }
+
+    Tag.findOneAndRemove({_id: id}).then((tag) => {
+        if(!tag)
+        {
+            return res.sendStatus(404);
+        }
+
+        res.send({tag});
+    }).catch((e) => {
+        res.status(400),send(e);
+    });
+
+});
 
 app.listen(PORT,() => {
     console.log(`Server started on port ${PORT}`);

@@ -143,3 +143,24 @@ describe('PATCH /tags/:id', () => {
 
     //TODO: it should not make a change to a tag that the user does not own
 });
+
+describe('DELETE /tags/:id', () => {
+    it('should remove a tag', (done) => {
+        request(app)
+        .delete(`/tags/${tags[2]._id.toHexString()}`)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.tag.code).toBe(tags[2].code)
+        })
+        .end((err,res) => {
+            if(err)
+            {
+                return done(err);
+            }
+            Tag.findById(tags[2]._id).then((tag) => {
+                expect(tag).toNotExist();
+                done();
+            }).catch((e) => done(e));
+        })
+    });
+});
