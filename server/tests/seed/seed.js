@@ -11,6 +11,10 @@ var userTwoId = new ObjectID();
 var contactOneId = new ObjectID();
 var contactTwoId = new ObjectID();
 
+var tagOneId = new ObjectID();
+var tagTwoId = new ObjectID();
+var tagThreeId = new ObjectID();
+
 const users = [{
     _id: userOneId,
     email: "adam@adamth.com",
@@ -46,19 +50,22 @@ const contacts = [
 ]
 
 const tags = [{
+    _id: tagOneId,
     code: 12345678,
     pin: 1234,
     _contact: contactOneId,
     _user: userOneId,
     active: true
 },{
+    _id: tagTwoId,
     code: 87654321,
     pin: 4321,
     _contact: contactTwoId,
     _user: userTwoId,
     active: true
 },{
-    code: 1357912,
+    _id: tagThreeId,
+    code: 12357912,
     pin: 5678
 }];
 
@@ -82,7 +89,7 @@ const populateUsers = (done) => {
 };
 
 const populateContacts = (done) => {
-    contacts.remove({}).then(() => {
+    Contact.remove({}).then(() => {
         var contactOne = new Contact(contacts[0]).save();
         var contactTwo = new Contact(contacts[1]).save();
 

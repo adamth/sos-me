@@ -4,6 +4,7 @@ const bodyParser    = require('body-parser');
 const _             = require('lodash');
 
 const {mongoose}    = require('./db/mongoose');
+const {ObjectID}    = require('mongodb');
 const {Tag}         = require('./models/tag');
 
 var PORT = process.env.PORT;
@@ -14,15 +15,17 @@ app.use(bodyParser.json());
 // POST tags
 app.post('/tags', (req,res) => {
     var tag = new Tag({
-        contact: req.body.contact,
-        phone: req.body.phone,
-        _creator: req.body._creator
+        code: req.body.code,
+        pin: req.body.pin,
+        active: req.body.active,
+        _user: req.body._user,
+        _contact: req.body._contact
     });
 
     tag.save().then((tag) => {
         res.send(tag)
     },(err) => {
-        res.send(err).sendStatus(400);
+        res.status(400).send(err);
     });
 });
 
@@ -31,18 +34,49 @@ app.get('/tags', (req, res) => {
     Tag.find().then((tags) => {
         res.send({tags})
     },(err) => {
-        res.send(err).sendStatus(400);
+        res.status(400).send(err);
     });
 });
 
 // GET tag
 app.get('/tags/:id',(req, res) => {
-    res.send('GET tags/:id');
+    var id = req.params.id;
+    if(!ObjectID.isValid(id))
+    {
+        return res.sendStatus(404);
+    }
+
+    Tag.findById(id).then((tag) => {
+        if(!tag)
+        {
+            return res.sendStatus(404);
+        }
+        res.send({tag});
+    }).catch((e) => {
+        res.status(400).send(err);
+    });
 });
 
-
-
 // PATCH tags
+app.patch('/tags/:id', (req,res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body,['_contact','active','_user']);
+
+    if(!ObjectID.isValid(id))
+    {
+        return res.sendStatus(404);
+    }
+
+    Tag.findOneAndUpdate({_id: id},{$set: body}, {new: true}).then((tag) =>{
+        if(!tag)
+        {
+            res.sendStatus(404);
+        }
+        res.send({tag})
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
+});
 
 // DELETE tags
 

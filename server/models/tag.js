@@ -4,13 +4,13 @@ var Tag = mongoose.model('Tag', {
     code: {
         type: Number,
         requied: true,
-        minLength: 8,
-        trim: true
+        min: [10000000, 'Code should be 8 digits'],
+        unique: true
     },
     pin: {
         type: Number,
         requied: true,
-        minLength: 4,
+        min: [1000, 'PIN should be 4 digits'],
         trim: true
     },
     active:{
@@ -20,11 +20,13 @@ var Tag = mongoose.model('Tag', {
     },  
      _user: {
          type: mongoose.Schema.ObjectId,
-         requied: false
+         requied: false,
+         default: null
      },
      _contact: {
         type: mongoose.Schema.ObjectId,
-        requied: false
+        requied: false,
+        default: null
     }
 });
 

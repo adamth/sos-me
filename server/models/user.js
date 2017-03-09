@@ -64,12 +64,12 @@ var UserSchema = new mongoose.Schema({
     phone:{
         type: String,
         required: false,
-        minLength: 8
+        minlength: 8
     },
     mobile:{
         type: String,
         required: false,
-        minLength: 10
+        minlength: 10
     }
 });
 
