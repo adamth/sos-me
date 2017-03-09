@@ -30,7 +30,47 @@ var UserSchema = new mongoose.Schema({
             type: String,
             required: true
         }
-    }]
+    }],
+    name:{
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 1
+    },
+    address: {
+        type: String,
+        required: false,
+        trim: true,
+        minlength: 1
+    },
+    suburb:{
+        type: String,
+        required: false,
+        trim: true,
+        minlength: 1
+    },
+    state:{
+        type: String,
+        required: false,
+        trim: true,
+        minlength: 1
+    },
+    postcode:{
+        type: String,
+        required: false,
+        trim: true,
+        minlength: 1
+    },
+    phone:{
+        type: String,
+        required: false,
+        minLength: 8
+    },
+    mobile:{
+        type: String,
+        required: false,
+        minLength: 10
+    }
 });
 
 UserSchema.methods.toJSON = function () {

@@ -7,13 +7,16 @@ const {app}                 = require('./../server');
 const {Tag}                 = require('./../models/tag');
 const {tags, 
         users,
+        contacts,
         populateTags,
-        populateUsers}           = require('./seed/seed');
+        populateUsers,
+        populateContacts}   = require('./seed/seed');
 //const {User} = require('./../models/user');
 
 beforeEach(populateTags);
 beforeEach(populateUsers);
-
+beforeEach(populateContacts);
+/*
 describe('POST /tags',() => {
     var objectID = new ObjectID();
     var tag = {
@@ -71,4 +74,5 @@ describe('GET /tags',() => {
         })
         .end(done);
     });
-});
+    
+});*/
