@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 
 app.use('/tags',require('./routes/tags'));
 app.use('/contacts',require('./routes/contacts'));
+app.use('/users',require('./routes/users'));
 
 app.listen(PORT,() => {
     console.log(`Server started on port ${PORT}`);
