@@ -19,6 +19,10 @@ router.post('/',(req,res) => {
 
 });
 
+router.get('/me', authenticate, (req, res) => {
+    res.send(req.user);
+});
+
 // POST /users/login {email, password}
 router.post('/login', (req, res) => {
     var body = _.pick(req.body,['email', 'password']);
