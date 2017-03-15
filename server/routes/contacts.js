@@ -12,6 +12,25 @@ router.get('/',(req,res) => {
     });
 });
 
+// GET contacts/:id
+router.get('/:id', (req,res) => {
+    var id = req.params.id;
+
+    if(!ObjectID.isValid(id))
+    {
+       return res.sendStatus(404); 
+    }
+    Contact.findById(id).then((contact) => {
+        if(!contact)
+        {
+            res.sendStatus(404);
+        }
+        res.send({contact})
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
+})
+
 // POST contacts/
 router.post('/',(req,res) => {
     var body = _.pick(req.body,['_id','name','phone','mobile','address','postCode','suburb','notes','_user']);
@@ -46,7 +65,25 @@ router.patch('/:id',(req,res) => {
 });
 
 // DELETE contacts/
+router.delete('/:id', (req,res) => {
+    var id = req.params.id;
+    
+    if(!ObjectID.isValid(id))
+    {
+        return res.sendStatus(404);
+    }
+    
+    Contact.findByIdAndRemove(id).then((contact) => {
+        if(!contact)
+        {
+            res.sendStatus(404);
+        }
 
+        res.send({contact});
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
+})
 
 
 module.exports = router;

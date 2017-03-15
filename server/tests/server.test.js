@@ -186,13 +186,34 @@ describe('DELETE /tags/:id', () => {
 });
 
 describe('GET /contacts', () => {
-    it('should return a list of cottacts', (done) => {
+    it('should return a list of contacts', (done) => {
         request(app)
         .get('/contacts')
         .expect(200)
         .expect((res) => {
             expect(res.body.contacts.length).toBe(2);
         })
+        .end(done);
+    });
+});
+
+describe('GET /contacts/:id', () => {
+    var hexId = contacts[0]._id.toHexString();
+
+    it('should return a single contact', (done) => {
+        request(app)
+        .get(`/contacts/${hexId}`)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.contact.name).toBe(contacts[0].name);
+        })
+        .end(done);
+    });
+
+    it('should return 404 for contact with invalid id',(done) => {
+        request(app)
+        .get(`/contacts/${hexId + 1}`)
+        .expect(404)
         .end(done);
     });
 });
@@ -276,6 +297,37 @@ describe('PATCH /contacts', () => {
         .patch(`/contacts/${hexId}`)
         .send(patchContact)
         .expect(400)
+        .end(done);
+    });
+});
+
+describe('DELETE /contacts/:id',() => {
+    var hexId = contacts[0]._id.toHexString();
+
+    it('should delete a contact',(done) => {
+        request(app)
+        .delete(`/contacts/${hexId}`)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.contact._id).toBe(hexId);
+        })
+        .end((err,res) => {
+            if(err)
+            {
+                return done(err);
+            }
+
+            Contact.findById(contacts[0]._id).then((contact) => {
+                expect(contact).toNotExist();
+                done();
+            }).catch((e) => done(e));
+        });
+    });
+
+    it('should not delete a contact with invalid id',(done) => {
+        request(app)
+        .delete(`/contacts/${hexId + 1}`)
+        .expect(404)
         .end(done);
     });
 });
