@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var Contact = mongoose.model('Contact',{
+var ContactSchema = new mongoose.Schema({
     name:{
         type: String,
         required: [true, 'Contact name is required'],
@@ -45,5 +45,7 @@ var Contact = mongoose.model('Contact',{
         requied: true
      }
 });
+
+var Contact = mongoose.model('Contact', ContactSchema);
 
 module.exports = {Contact}

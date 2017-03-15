@@ -5,6 +5,7 @@ const _                     = require('lodash');
 
 const {app}                 = require('./../server');
 const {Tag}                 = require('./../models/tag');
+const {Contact}             = require('./../models/contact');
 const {tags, 
         users,
         contacts,
@@ -141,6 +142,16 @@ describe('PATCH /tags/:id', () => {
         });
     });
 
+    it('should not update a tag with invalid data', (done) => {
+        var invalidTag = {
+            _contact: 'hello'
+        };
+        request(app)
+        .patch(`/tags/${tags[2]._id.toHexString()}`)
+        .send(invalidTag)
+        .expect(400)
+        .end(done);
+    });
     //TODO: it should not make a change to a tag that the user does not own
 });
 
@@ -170,6 +181,101 @@ describe('DELETE /tags/:id', () => {
         request(app)
         .delete(`/tags/${id}`)
         .expect(404)
+        .end(done);
+    });
+});
+
+describe('GET /contacts', () => {
+    it('should return a list of cottacts', (done) => {
+        request(app)
+        .get('/contacts')
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.contacts.length).toBe(2);
+        })
+        .end(done);
+    });
+});
+
+describe('POST /contacts',() => {
+    var testContact = {
+            _id: new ObjectID(),
+            name:"Jenna Thompson",
+            phone:"98655986",
+            mobile:"0412345678",
+            address:"123 Fake St",
+            postCode:"1234",
+            suburb:"Faketown",
+            notes:"Known to crack it for no reason",
+            _user: users[0]._id
+        }
+
+    it('should create a new contact',(done) => {
+        request(app)
+        .post('/contacts')
+        .send(testContact)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.contact.name).toBe(testContact.name);
+            expect(res.body.contact._user).toBe(users[0]._id.toHexString());
+        })
+        .end((err,res) => {
+            if(err)
+            {
+                return done(err);
+            }
+            
+            Contact.find({_id: testContact._id}).then((contact) => {
+                expect(contact[0].name).toBe(testContact.name);
+                expect(contact[0]._user).toEqual(users[0]._id);
+                done();
+            }).catch((e) => done(e));
+        });
+    });
+
+    it('should not create an invalid contact', (done) => {
+        testContact.name = '';
+        request(app)
+        .post('/contacts')
+        .send(testContact)
+        .expect(400)
+        .end(done);
+    });
+});
+
+describe('PATCH /contacts', () => {
+    
+    it('should update a cotnact',(done) => {
+        var patchContact = {
+            phone: '12345678',
+            mobile: '0412345678',
+            address: '123 Fake St'
+        }
+        var hexId = contacts[0]._id.toHexString();
+        request(app)
+        .patch(`/contacts/${hexId}`)
+        .send(patchContact)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.contact.phone).toBe(patchContact.phone);
+            expect(res.body.contact.mobile).toBe(patchContact.mobile);
+            expect(res.body.contact.address).toBe(patchContact.address);
+        })
+        .end(done)
+    });
+
+    it('should not update a contact with invalid details', (done) => {
+        var patchContact = {
+            phone: '1',
+            mobile: '0412345678',
+            address: '123 Fake St'
+        }
+        var hexId = contacts[1]._id.toHexString();
+
+        request(app)
+        .patch(`/contacts/${hexId}`)
+        .send(patchContact)
+        .expect(400)
         .end(done);
     });
 });
