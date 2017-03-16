@@ -1,11 +1,12 @@
 const router        = require('express').Router();
-const {Contact}         = require('./../models/contact');
+const {Contact}     = require('./../models/contact');
 const _             = require('lodash');
 const {ObjectID}    = require('mongodb');
+var {authenticate}  = require('./../middleware/authenticate');
 
 // GET contacts/
-router.get('/',(req,res) => {
-    Contact.find().then((contacts) => {
+router.get('/',  authenticate, (req,res) => {
+    Contact.find({_user: req.user._id}).then((contacts) => {
         res.send({contacts});
     },(err) => {
         res.status(400).send(err);
@@ -32,8 +33,10 @@ router.get('/:id', (req,res) => {
 })
 
 // POST contacts/
-router.post('/',(req,res) => {
+router.post('/', authenticate, (req,res) => {
     var body = _.pick(req.body,['_id','name','phone','mobile','address','postCode','suburb','notes','_user']);
+    body._user = req.user._id;
+
     var newContact = new Contact(body);
 
     newContact.save().then((contact) => {
@@ -44,16 +47,17 @@ router.post('/',(req,res) => {
 
 });
 // PATCH contacts/:id
-router.patch('/:id',(req,res) => {
+router.patch('/:id', authenticate, (req,res) => {
     var id = req.params.id;
     var body = _.pick(req.body,['name','phone','mobile','address','postCode','suburb','notes']);
+    body._user = req.user._id;
 
     if(!ObjectID.isValid(id))
     {
         return res.sendStatus(404);
     }
 
-    Contact.findByIdAndUpdate(id,{$set: body}, {runValidators: true, new: true}).then((contact) => {
+    Contact.findOneAndUpdate({_id:id, _user: req.user._id},{$set: body}, {runValidators: true, new: true}).then((contact) => {
         if(!contact)
         {
             res.sendStatus(404);
@@ -65,7 +69,7 @@ router.patch('/:id',(req,res) => {
 });
 
 // DELETE contacts/
-router.delete('/:id', (req,res) => {
+router.delete('/:id', authenticate, (req,res) => {
     var id = req.params.id;
     
     if(!ObjectID.isValid(id))
@@ -73,7 +77,7 @@ router.delete('/:id', (req,res) => {
         return res.sendStatus(404);
     }
     
-    Contact.findByIdAndRemove(id).then((contact) => {
+    Contact.findOneAndRemove({_id: id, _user: req.user._id}).then((contact) => {
         if(!contact)
         {
             res.sendStatus(404);
