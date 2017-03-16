@@ -67,7 +67,7 @@ describe('POST /tags',() => {
 
 
 describe('PATCH /activate', () => {
-    it('should activate a tag', (done) => {
+    it('should activate a tag for authenticated user', (done) => {
         activateTag = _.pick(tags[2],['code', 'pin']);
 
         request(app)
@@ -90,6 +90,41 @@ describe('PATCH /activate', () => {
             }).catch((e) => done(e));
         });
     });
+
+    it('should not activate a tag for unauthenticated user', (done) => {
+        activateTag = _.pick(tags[2],['code', 'pin']);
+
+        request(app)
+        .patch('/tags/activate')
+        .send(activateTag)
+        .expect(401)
+        .end(done);
+    });
+
+    it('should not activate a tag already activated', (done) => {
+        activateTag = _.pick(tags[0],['code', 'pin']);
+
+        request(app)
+        .patch('/tags/activate')
+        .set('x-auth', users[0].tokens[0].token)
+        .send(activateTag)
+        .expect(403)
+        .end(done);
+    });
+
+    it('should not activate an invalid tag', (done) => {
+        activateTag = {
+            code: '123',
+            pin: '123'
+        }
+
+        request(app)
+        .patch('/tags/activate')
+        .send(activateTag)
+        .set('x-auth', users[0].tokens[0].token)
+        .expect(404)
+        .end(done);
+    });
 });
 
 describe('GET /tags',() => {
@@ -101,6 +136,13 @@ describe('GET /tags',() => {
         .expect((res) => {
             expect(res.body.tags.length).toBe(1);
         })
+        .end(done);
+    });
+
+    it('should not get tags for an unauthenticated user', (done) => {
+        request(app)
+        .get('/tags')
+        .expect(401)
         .end(done);
     });
 
@@ -117,6 +159,14 @@ describe('GET /tags/:id', () => {
             expect(res.body.tag.pin).toBe(tags[0].pin);
         })
         .end(done);
+
+    });
+
+    it('should not get a single tag by id for an unauthenticated user', (done) => {
+        request(app)
+        .get(`/tags/${tags[0]._id.toHexString()}`)
+        .expect(401)
+        .end(done);
     });
 
     it('should return 404 for tag with invalid id', (done) => {
@@ -130,30 +180,8 @@ describe('GET /tags/:id', () => {
 });
 
 describe('PATCH /tags/:id', () => {
-    //     it('should assign a user and activate a tag',(done) => {
-    //     var body = {
-    //         active: true,
-    //         _user: users[0]._id
-    //     }
-    //     request(app)
-    //     .patch(`/tags/${tags[2]._id.toHexString()}`)
-    //     .set('x-auth', users[0].tokens[0].token)
-    //     .send(body)
-    //     .expect(200)
-    //     .expect((res) => {
-    //         expect(res.body.tag.active).toBe(true);
-    //         expect(res.body.tag._user).toBe(users[0]._id.toHexString());
-    //         done();
-    //     })
-    //     .end((err, res) => {
-    //         if(err)
-    //         {
-    //             return done(err);
-    //         }
-    //     });
-    // });
 
-    it('should assign a contact to a tag',(done) => {
+    it('should assign a contact to a tag for authenticated user',(done) => {
         var body = {
             _contact: contacts[0]._id
         }
@@ -174,6 +202,17 @@ describe('PATCH /tags/:id', () => {
         });
     });
 
+    it('should not assign a contact to a tag for unauthenticated user',(done) => {
+        var body = {
+            _contact: contacts[0]._id
+        }
+        request(app)
+        .patch(`/tags/${tags[0]._id.toHexString()}`)
+        .send(body)
+        .expect(401)
+        .end(done);
+    });
+
     it('should not update a tag with invalid data', (done) => {
         var invalidTag = {
             _contact: 'hello'
@@ -189,7 +228,7 @@ describe('PATCH /tags/:id', () => {
 });
 
 describe('DELETE /tags/:id', () => {
-    it('should remove a tag', (done) => {
+    it('should remove a tag for authenticated user', (done) => {
         request(app)
         .delete(`/tags/${tags[0]._id.toHexString()}`)
         .set('x-auth', users[0].tokens[0].token)
@@ -207,6 +246,13 @@ describe('DELETE /tags/:id', () => {
                 done();
             }).catch((e) => done(e));
         })
+    });
+
+    it('should not remove a tag for unauthenticated user', (done) => {
+        request(app)
+        .delete(`/tags/${tags[0]._id.toHexString()}`)
+        .expect(401)
+        .end(done);
     });
 
     it('should not remove a tag with an invalid id', (done) => {
@@ -231,6 +277,13 @@ describe('GET /contacts', () => {
         })
         .end(done);
     });
+
+    it('should not return a list of contacts for unauthenticated user', (done) => {
+        request(app)
+        .get('/contacts')
+        .expect(401)
+        .end(done);
+    });
 });
 
 describe('GET /contacts/:id', () => {
@@ -244,6 +297,13 @@ describe('GET /contacts/:id', () => {
         .expect((res) => {
             expect(res.body.contact.name).toBe(contacts[0].name);
         })
+        .end(done);
+    });
+
+    it('should not return a single contact for unauthenticated user', (done) => {
+        request(app)
+        .get(`/contacts/${hexId}`)
+        .expect(401)
         .end(done);
     });
 
@@ -293,6 +353,14 @@ describe('POST /contacts',() => {
         });
     });
 
+    it('should not create a new contact for unauthenticated user',(done) => {
+        request(app)
+        .post('/contacts')
+        .send(testContact)
+        .expect(401)
+        .end(done);
+    });
+
     it('should not create an invalid contact for authenticated user', (done) => {
         testContact.name = '';
         request(app)
@@ -323,7 +391,21 @@ describe('PATCH /contacts', () => {
             expect(res.body.contact.mobile).toBe(patchContact.mobile);
             expect(res.body.contact.address).toBe(patchContact.address);
         })
-        .end(done)
+        .end(done);
+    });
+
+    it('should not update a cotnact for unauthenticated user',(done) => {
+        var patchContact = {
+            phone: '12345678',
+            mobile: '0412345678',
+            address: '123 Fake St'
+        }
+        var hexId = contacts[0]._id.toHexString();
+        request(app)
+        .patch(`/contacts/${hexId}`)
+        .send(patchContact)
+        .expect(401)
+        .end(done);
     });
 
     it('should not update a contact with invalid details for authenticated user', (done) => {
@@ -365,6 +447,13 @@ describe('DELETE /contacts/:id',() => {
                 done();
             }).catch((e) => done(e));
         });
+    });
+
+    it('should not delete a contact for unauthenticated user',(done) => {
+        request(app)
+        .delete(`/contacts/${hexId}`)
+        .expect(401)
+        .end(done);
     });
 
     it('should not delete a contact with invalid id for authenticated user',(done) => {
@@ -427,6 +516,7 @@ describe('POST /users',() => {
             }).catch((e) => done(e));
         });
     });
+    
     it('should reutrn validation errors if request invalid', (done) => {
         request(app)
         .post('/users')
@@ -434,6 +524,7 @@ describe('POST /users',() => {
         .expect(400)
         .end(done);
     });
+
     it('should not create user if email is in use', (done) => {
         request(app)
         .post('/users')

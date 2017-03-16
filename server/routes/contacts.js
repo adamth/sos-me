@@ -14,14 +14,14 @@ router.get('/',  authenticate, (req,res) => {
 });
 
 // GET contacts/:id
-router.get('/:id', (req,res) => {
+router.get('/:id', authenticate, (req,res) => {
     var id = req.params.id;
 
     if(!ObjectID.isValid(id))
     {
        return res.sendStatus(404); 
     }
-    Contact.findById(id).then((contact) => {
+    Contact.findOne({_id: id, _user: req.user._id}).then((contact) => {
         if(!contact)
         {
             res.sendStatus(404);
