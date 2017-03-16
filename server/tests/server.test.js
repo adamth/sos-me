@@ -32,9 +32,9 @@ describe('POST /tags',() => {
         .send(tag)
         .expect(200)      
         .expect((res) => {
-            expect(res.body.code).toBe(tag.code);
-            expect(res.body.pin).toBe(tag.pin);
-            expect(res.body._user).toBe(null);
+            expect(res.body.tag.code).toBe(tag.code);
+            expect(res.body.tag.pin).toBe(tag.pin);
+            expect(res.body.tag._user).toBe(null);
         })
         .end((err, res) => {
             if(err){
@@ -66,13 +66,40 @@ describe('POST /tags',() => {
 });
 
 
-describe('GET /tags',() => {
-        it('should get all tags', (done) => {
+describe('PATCH /activate', () => {
+    it('should activate a tag', (done) => {
+        activateTag = _.pick(tags[2],['code', 'pin']);
+
         request(app)
-        .get('/tags')
+        .patch('/tags/activate')
+        .send(activateTag)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
-            expect(res.body.tags.length).toBe(3);
+            expect(res.body.tag._user).toBe(users[0]._id.toHexString());
+        })
+        .end((err,res) => {
+            if(err)
+            {
+                return done(err);
+            }
+
+            Tag.findOne(activateTag).then((tag) => {
+                expect(tag.active).toBe(true);
+                done()
+            }).catch((e) => done(e));
+        });
+    });
+});
+
+describe('GET /tags',() => {
+        it('should get all tags for an authenticated user', (done) => {
+        request(app)
+        .get('/tags')
+        .set('x-auth', users[0].tokens[0].token)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.tags.length).toBe(1);
         })
         .end(done);
     });
@@ -80,9 +107,10 @@ describe('GET /tags',() => {
 });
 
 describe('GET /tags/:id', () => {
-    it('should get a single tag by id', (done) => {
+    it('should get a single tag by id for an authenticated user', (done) => {
         request(app)
         .get(`/tags/${tags[0]._id.toHexString()}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
             expect(res.body.tag.code).toBe(tags[0].code);
@@ -95,40 +123,43 @@ describe('GET /tags/:id', () => {
         var id = new ObjectID();
         request(app)
         .get(`/tags/${id.toHexString()}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(404)
         .end(done);
     });
 });
 
 describe('PATCH /tags/:id', () => {
-        it('should assign a user and activate a tag',(done) => {
-        var body = {
-            active: true,
-            _user: users[0]._id
-        }
-        request(app)
-        .patch(`/tags/${tags[2]._id.toHexString()}`)
-        .send(body)
-        .expect(200)
-        .expect((res) => {
-            expect(res.body.tag.active).toBe(true);
-            expect(res.body.tag._user).toBe(users[0]._id.toHexString());
-            done();
-        })
-        .end((err, res) => {
-            if(err)
-            {
-                return done(err);
-            }
-        });
-    });
+    //     it('should assign a user and activate a tag',(done) => {
+    //     var body = {
+    //         active: true,
+    //         _user: users[0]._id
+    //     }
+    //     request(app)
+    //     .patch(`/tags/${tags[2]._id.toHexString()}`)
+    //     .set('x-auth', users[0].tokens[0].token)
+    //     .send(body)
+    //     .expect(200)
+    //     .expect((res) => {
+    //         expect(res.body.tag.active).toBe(true);
+    //         expect(res.body.tag._user).toBe(users[0]._id.toHexString());
+    //         done();
+    //     })
+    //     .end((err, res) => {
+    //         if(err)
+    //         {
+    //             return done(err);
+    //         }
+    //     });
+    // });
 
     it('should assign a contact to a tag',(done) => {
         var body = {
             _contact: contacts[0]._id
         }
         request(app)
-        .patch(`/tags/${tags[2]._id.toHexString()}`)
+        .patch(`/tags/${tags[0]._id.toHexString()}`)
+        .set('x-auth', users[0].tokens[0].token)
         .send(body)
         .expect(200)
         .expect((res) => {
@@ -148,7 +179,8 @@ describe('PATCH /tags/:id', () => {
             _contact: 'hello'
         };
         request(app)
-        .patch(`/tags/${tags[2]._id.toHexString()}`)
+        .patch(`/tags/${tags[0]._id.toHexString()}`)
+        .set('x-auth', users[0].tokens[0].token)
         .send(invalidTag)
         .expect(400)
         .end(done);
@@ -159,17 +191,18 @@ describe('PATCH /tags/:id', () => {
 describe('DELETE /tags/:id', () => {
     it('should remove a tag', (done) => {
         request(app)
-        .delete(`/tags/${tags[2]._id.toHexString()}`)
+        .delete(`/tags/${tags[0]._id.toHexString()}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
-            expect(res.body.tag.code).toBe(tags[2].code)
+            expect(res.body.tag.code).toBe(tags[0].code)
         })
         .end((err,res) => {
             if(err)
             {
                 return done(err);
             }
-            Tag.findById(tags[2]._id).then((tag) => {
+            Tag.findById(tags[0]._id).then((tag) => {
                 expect(tag).toNotExist();
                 done();
             }).catch((e) => done(e));
@@ -181,18 +214,20 @@ describe('DELETE /tags/:id', () => {
 
         request(app)
         .delete(`/tags/${id}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(404)
         .end(done);
     });
 });
 
 describe('GET /contacts', () => {
-    it('should return a list of contacts', (done) => {
+    it('should return a list of contacts for an authenticated user', (done) => {
         request(app)
         .get('/contacts')
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
-            expect(res.body.contacts.length).toBe(2);
+            expect(res.body.contacts.length).toBe(1);
         })
         .end(done);
     });
@@ -201,9 +236,10 @@ describe('GET /contacts', () => {
 describe('GET /contacts/:id', () => {
     var hexId = contacts[0]._id.toHexString();
 
-    it('should return a single contact', (done) => {
+    it('should return a single contact for an authenticated user', (done) => {
         request(app)
         .get(`/contacts/${hexId}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
             expect(res.body.contact.name).toBe(contacts[0].name);
@@ -214,6 +250,7 @@ describe('GET /contacts/:id', () => {
     it('should return 404 for contact with invalid id',(done) => {
         request(app)
         .get(`/contacts/${hexId + 1}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(404)
         .end(done);
     });
@@ -232,9 +269,10 @@ describe('POST /contacts',() => {
             _user: users[0]._id
         }
 
-    it('should create a new contact',(done) => {
+    it('should create a new contact for authenticated user',(done) => {
         request(app)
         .post('/contacts')
+        .set('x-auth', users[0].tokens[0].token)
         .send(testContact)
         .expect(200)
         .expect((res) => {
@@ -255,10 +293,11 @@ describe('POST /contacts',() => {
         });
     });
 
-    it('should not create an invalid contact', (done) => {
+    it('should not create an invalid contact for authenticated user', (done) => {
         testContact.name = '';
         request(app)
         .post('/contacts')
+        .set('x-auth', users[0].tokens[0].token)
         .send(testContact)
         .expect(400)
         .end(done);
@@ -267,7 +306,7 @@ describe('POST /contacts',() => {
 
 describe('PATCH /contacts', () => {
     
-    it('should update a cotnact',(done) => {
+    it('should update a cotnact for authenticated user',(done) => {
         var patchContact = {
             phone: '12345678',
             mobile: '0412345678',
@@ -276,6 +315,7 @@ describe('PATCH /contacts', () => {
         var hexId = contacts[0]._id.toHexString();
         request(app)
         .patch(`/contacts/${hexId}`)
+        .set('x-auth', users[0].tokens[0].token)
         .send(patchContact)
         .expect(200)
         .expect((res) => {
@@ -286,7 +326,7 @@ describe('PATCH /contacts', () => {
         .end(done)
     });
 
-    it('should not update a contact with invalid details', (done) => {
+    it('should not update a contact with invalid details for authenticated user', (done) => {
         var patchContact = {
             phone: '1',
             mobile: '0412345678',
@@ -296,6 +336,7 @@ describe('PATCH /contacts', () => {
 
         request(app)
         .patch(`/contacts/${hexId}`)
+        .set('x-auth', users[0].tokens[0].token)
         .send(patchContact)
         .expect(400)
         .end(done);
@@ -305,9 +346,10 @@ describe('PATCH /contacts', () => {
 describe('DELETE /contacts/:id',() => {
     var hexId = contacts[0]._id.toHexString();
 
-    it('should delete a contact',(done) => {
+    it('should delete a contact for authenticated user',(done) => {
         request(app)
         .delete(`/contacts/${hexId}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
             expect(res.body.contact._id).toBe(hexId);
@@ -325,9 +367,10 @@ describe('DELETE /contacts/:id',() => {
         });
     });
 
-    it('should not delete a contact with invalid id',(done) => {
+    it('should not delete a contact with invalid id for authenticated user',(done) => {
         request(app)
         .delete(`/contacts/${hexId + 1}`)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(404)
         .end(done);
     });

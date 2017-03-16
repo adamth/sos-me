@@ -2,22 +2,50 @@ const router        = require('express').Router();
 const {Tag}         = require('./../models/tag');
 const _             = require('lodash');
 const {ObjectID}    = require('mongodb');
+var {authenticate}  = require('./../middleware/authenticate');
 
 // POST tags/
+// REMOVE THIS BEFORE DEPLOYING
 router.post('/', (req,res) => {
     var body = _.pick(req.body,['code','pin','active','_user','_contact']);
     var newTag = new Tag(body);
 
     newTag.save().then((tag) => {
-        res.send(tag)
+        res.send({tag})
     },(err) => {
         res.status(400).send(err);
     });
 });
 
+// PATCH /activate
+// User can enter a code and pin to activate a tag
+router.patch('/activate', authenticate, (req,res) => {
+    var body = _.pick(req.body,['code','pin']);
+    // User must enter a valid code and pin to activate a tag
+    Tag.findOne(body).then((tag) => {
+        if(!tag)
+        {
+            return res.sendStatus(404);
+        }
+        if(tag.active)
+        {
+            return res.sendStatus(403);
+        }
+
+        tag.active = true;
+        tag._user = req.user._id;
+
+        tag.save().then((tag) => {
+            res.send({tag});
+        }).catch((e) => {
+            res.status(400).send(e);
+        })
+    });
+});
+
 // GET tags/
-router.get('/', (req, res) => {
-    Tag.find().then((tags) => {
+router.get('/', authenticate, (req, res) => {
+    Tag.find({_user: req.user._id}).then((tags) => {
         res.send({tags})
     },(err) => {
         res.status(400).send(err);
@@ -25,14 +53,14 @@ router.get('/', (req, res) => {
 });
 
 // GET tags/:id
-router.get('/:id',(req, res) => {
+router.get('/:id', authenticate, (req, res) => {
     var id = req.params.id;
     if(!ObjectID.isValid(id))
     {
         return res.sendStatus(404);
     }
 
-    Tag.findById(id).then((tag) => {
+    Tag.findOne({_id: id, _user: req.user._id}).then((tag) => {
         if(!tag)
         {
             return res.sendStatus(404);
@@ -44,16 +72,16 @@ router.get('/:id',(req, res) => {
 });
 
 // PATCH tags
-router.patch('/:id', (req,res) => {
+router.patch('/:id', authenticate,(req,res) => {
     var id = req.params.id;
-    var body = _.pick(req.body,['_contact','active','_user']);
+    var body = _.pick(req.body,['_contact']);
 
     if(!ObjectID.isValid(id))
     {
         return res.sendStatus(404);
     }
 
-    Tag.findByIdAndUpdate(id,{$set: body}, {runValidators: true, new: true}).then((tag) =>{
+    Tag.findOneAndUpdate({_id: id, _user: req.user._id},{$set: body}, {runValidators: true, new: true}).then((tag) =>{
         if(!tag)
         {
             res.sendStatus(404);
@@ -65,7 +93,7 @@ router.patch('/:id', (req,res) => {
 });
 
 // DELETE tags
-router.delete('/:id', (req,res) => {
+router.delete('/:id', authenticate, (req,res) => {
     var id = req.params.id;
 
     if(!ObjectID.isValid(id))
@@ -73,7 +101,7 @@ router.delete('/:id', (req,res) => {
         return res.sendStatus(404);
     }
 
-    Tag.findByIdAndRemove(id).then((tag) => {
+    Tag.findOneAndRemove({_id: id, _user: req.user._id}).then((tag) => {
         if(!tag)
         {
             return res.sendStatus(404);
