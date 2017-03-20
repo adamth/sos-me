@@ -14,6 +14,7 @@ var contactTwoId = new ObjectID();
 var tagOneId = new ObjectID();
 var tagTwoId = new ObjectID();
 var tagThreeId = new ObjectID();
+var tagFourId = new ObjectID();
 
 const users = [{
     _id: userOneId,
@@ -67,6 +68,12 @@ const tags = [{
     _id: tagThreeId,
     code: 12357912,
     pin: 5678
+},{
+    _id: tagFourId,
+    code: 58493098,
+    pin: 4321,
+    _user: userTwoId,
+    active: true
 }];
 
 const populateTags = (done) => {
@@ -74,8 +81,9 @@ const populateTags = (done) => {
         var tagOne = new Tag(tags[0]).save();
         var tagTwo = new Tag(tags[1]).save();
         var tagThree = new Tag(tags[2]).save();
+        var tagFour = new Tag(tags[3]).save();
 
-        return Promise.all([tagOne, tagTwo, tagThree]);
+        return Promise.all([tagOne, tagTwo, tagThree, tagFour]);
     }).then(() => done());
 };
 

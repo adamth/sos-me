@@ -1,8 +1,10 @@
-const router        = require('express').Router();
-const {Tag}         = require('./../models/tag');
-const _             = require('lodash');
-const {ObjectID}    = require('mongodb');
-var {authenticate}  = require('./../middleware/authenticate');
+const router            = require('express').Router();
+const {Tag}             = require('./../models/tag');
+const {Contact}         = require('./../models/contact')
+const _                 = require('lodash');
+const {ObjectID}        = require('mongodb');
+const {authenticate}    = require('./../middleware/authenticate');
+
 
 // POST tags/
 // REMOVE THIS BEFORE DEPLOYING
@@ -41,6 +43,40 @@ router.patch('/activate', authenticate, (req,res) => {
             res.status(400).send(e);
         })
     });
+});
+
+// PATCH assign/
+// User can assign a contact to a tag
+router.patch('/assign', authenticate, (req,res) => {
+    var tagId = req.body.tag;
+    var contactId = req.body.contact;
+    console.log(tagId,contactId);
+
+    if(!ObjectID.isValid(tagId) || !ObjectID.isValid(contactId))
+    {
+        return res.send(404);
+    }
+
+    //Find a tag and update it
+    Contact.findOne({_id: contactId, _user: req.user._id}).then((contact) => {
+        if(!contact)
+        {
+            return res.sendStatus(404);
+        }
+        Tag.findOneAndUpdate({_id: tagId, _user: req.user._id},{$set:{_contact: contact._id}},{new: true}).then((tag) => {
+            if(!tag)
+            {
+                req.sendStatus(404);
+            }
+            res.send({tag});
+        }).catch((e) => {         
+            res.status(400).send(e);
+        });
+    }, (err) => {
+        res.status(400).send(err);
+    });
+
+
 });
 
 // GET tags/

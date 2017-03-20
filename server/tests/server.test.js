@@ -58,7 +58,7 @@ describe('POST /tags',() => {
         .expect(400)
         .end((err, res) => {
             Tag.find().then((res) => {
-                expect(res.length).toBe(3);
+                expect(res.length).toBe(4);
                 done();
             }).catch((e) => done(e));
         });
@@ -175,6 +175,53 @@ describe('GET /tags/:id', () => {
         .get(`/tags/${id.toHexString()}`)
         .set('x-auth', users[0].tokens[0].token)
         .expect(404)
+        .end(done);
+    });
+});
+
+describe('PATCH /assign', ()=> {
+    it('should assign a contact to a tag for authenticatd user', (done) => {
+        var tagId = tags[3]._id.toHexString();
+        var contactId = contacts[1]._id.toHexString();
+        request(app)
+        .patch('/tags/assign')
+        .set('x-auth', users[1].tokens[0].token)
+        .send({tag: tagId, contact: contactId})
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.tag._contact).toBe(contactId);
+        })
+        .end((err,res) => {
+            if(err)
+            {
+                return done(err);
+            }
+
+            Tag.findById(tags[3]._id).then((tag) => {
+                expect(tag._contact).toEqual(contacts[1]._id);
+                done()
+            }).catch((e) => done(e));
+        });
+    });
+
+    it('should not assign an invalid contact to a tag for authenticated user', (done) => {
+        var tagId = tags[3]._id.toHexString();
+        var contactId = contacts[0]._id.toHexString();
+        request(app)
+        .patch('/tags/assign')
+        .set('x-auth', users[1].tokens[0].token)
+        .send({tag: tagId, contact: contactId})
+        .expect(404)
+        .end(done);
+    });
+
+    it('should not assign a tag for unauthenticated user', (done) => {
+        var tagId = tags[3]._id.toHexString();
+        var contactId = contacts[1]._id.toHexString();
+        request(app)
+        .patch('/tags/assign')
+        .send({tag: tagId, contact: contactId})
+        .expect(401)
         .end(done);
     });
 });
@@ -516,7 +563,7 @@ describe('POST /users',() => {
             }).catch((e) => done(e));
         });
     });
-    
+
     it('should reutrn validation errors if request invalid', (done) => {
         request(app)
         .post('/users')
