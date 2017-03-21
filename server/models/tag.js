@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var Tag = mongoose.model('Tag', {
+var TagSchema = new mongoose.Schema({
     code: {
         type: Number,
         requied: true,
@@ -29,5 +29,7 @@ var Tag = mongoose.model('Tag', {
         default: null
     }
 });
+
+var Tag = mongoose.model('Tag', TagSchema);
 
 module.exports = {Tag};

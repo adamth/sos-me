@@ -1,6 +1,7 @@
 const router            = require('express').Router();
 const {Tag}             = require('./../models/tag');
-const {Contact}         = require('./../models/contact')
+const {Contact}         = require('./../models/contact');
+const {User}            = require('./../models/user');
 const _                 = require('lodash');
 const {ObjectID}        = require('mongodb');
 const {authenticate}    = require('./../middleware/authenticate');
@@ -50,7 +51,6 @@ router.patch('/activate', authenticate, (req,res) => {
 router.patch('/assign', authenticate, (req,res) => {
     var tagId = req.body.tag;
     var contactId = req.body.contact;
-    console.log(tagId,contactId);
 
     if(!ObjectID.isValid(tagId) || !ObjectID.isValid(contactId))
     {
@@ -75,8 +75,6 @@ router.patch('/assign', authenticate, (req,res) => {
     }, (err) => {
         res.status(400).send(err);
     });
-
-
 });
 
 // GET tags/
@@ -103,6 +101,44 @@ router.get('/:id', authenticate, (req, res) => {
         }
         res.send({tag});
     }).catch((e) => {
+        res.status(400).send(err);
+    });
+});
+
+// POST find/
+// Find a tag based on code and pin
+router.post('/find',(req,res) => {
+    var body = _.pick(req.body,['code','pin']);
+
+    // Find the tag
+    Tag.findOne({pin: body.pin, code: body.code, active: true}).then((tag) => {
+        if(!tag)
+        {
+            return res.sendStatus(404);
+        }
+        
+        // Find the user
+        User.findById(tag._user).then((user) => {
+            if(!user)
+            {
+                res.sendStatus(404);
+            }
+            // Find the contact
+            Contact.findById(tag._contact).then((contact) => {
+                user = user.findByTag();
+                contact = contact.findByTag();
+                res.send({
+                    user,
+                    contact
+                });
+            }).catch((e) => {
+                res.status(400).send(e);
+            })
+        }).catch((e) => {
+            res.status(400).send(e);
+        });
+
+    }, (err) => {
         res.status(400).send(err);
     });
 });

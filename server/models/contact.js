@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+var mongoose    = require('mongoose');
+const _         = require('lodash');
 
 var ContactSchema = new mongoose.Schema({
     name:{
@@ -45,6 +46,12 @@ var ContactSchema = new mongoose.Schema({
         requied: true
      }
 });
+
+ContactSchema.methods.findByTag = function() {
+    var contact = this;
+    var contactObject = contact.toObject();
+    return _.pick(contactObject,['name','phone','mobile','address','postCode','suburb','notes']);
+}
 
 var Contact = mongoose.model('Contact', ContactSchema);
 

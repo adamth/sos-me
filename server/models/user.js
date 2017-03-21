@@ -77,7 +77,14 @@ UserSchema.methods.toJSON = function () {
     var user = this;
     var userObject = user.toObject();
 
-    return _.pick(userObject,['_id', 'email']);
+    return _.pick(userObject,['_id', 'email','name','address','suburb','state', 'postcode','phone','mobile']);
+};
+
+UserSchema.methods.findByTag = function () {
+    var user = this;
+    var userObject = user.toObject();
+
+    return _.pick(userObject,['email','name','address','suburb','state', 'postcode','phone','mobile']);
 };
 
 UserSchema.methods.generateAuthToken = function () {
