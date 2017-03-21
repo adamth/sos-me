@@ -13,7 +13,6 @@ const {tags,
         populateTags,
         populateUsers,
         populateContacts}   = require('./seed/seed');
-//const {User} = require('./../models/user');
 
 beforeEach(populateTags);
 beforeEach(populateUsers);
@@ -65,6 +64,29 @@ describe('POST /tags',() => {
     });
 });
 
+describe('POST /tags/find',() => {
+    it('should find a tag and return conact details',(done) => {
+        var tag = {code: tags[0].code, pin: tags[0].pin};
+        request(app)
+        .post('/tags/find')
+        .send(tag)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.user.name).toBe(users[0].name);
+            expect(res.body.contact.name).toBe(contacts[0].name);
+        })
+        .end(done);
+    });
+
+    it('should not find tag details for invalid tag', (done) => {
+        var tag = {code: 12345678, pin: 1111};
+        request(app)
+        .post('/tags/find')
+        .send(tag)
+        .expect(404)
+        .end(done);
+    });
+});
 
 describe('PATCH /activate', () => {
     it('should activate a tag for authenticated user', (done) => {
