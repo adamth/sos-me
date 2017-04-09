@@ -144,25 +144,25 @@ router.post('/find',(req,res) => {
 });
 
 // PATCH tags
-router.patch('/:id', authenticate,(req,res) => {
-    var id = req.params.id;
-    var body = _.pick(req.body,['_contact']);
+// router.patch('/:id', authenticate,(req,res) => {
+//     var id = req.params.id;
+//     var body = _.pick(req.body,['_contact']);
 
-    if(!ObjectID.isValid(id))
-    {
-        return res.sendStatus(404);
-    }
+//     if(!ObjectID.isValid(id))
+//     {
+//         return res.sendStatus(404);
+//     }
 
-    Tag.findOneAndUpdate({_id: id, _user: req.user._id},{$set: body}, {runValidators: true, new: true}).then((tag) =>{
-        if(!tag)
-        {
-            res.sendStatus(404);
-        }
-        res.send({tag})
-    }).catch((e) => {
-        res.status(400).send(e);
-    });
-});
+//     Tag.findOneAndUpdate({_id: id, _user: req.user._id},{$set: body}, {runValidators: true, new: true}).then((tag) =>{
+//         if(!tag)
+//         {
+//             res.sendStatus(404);
+//         }
+//         res.send({tag})
+//     }).catch((e) => {
+//         res.status(400).send(e);
+//     });
+// });
 
 // DELETE tags
 router.delete('/:id', authenticate, (req,res) => {

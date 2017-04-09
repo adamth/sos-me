@@ -248,53 +248,53 @@ describe('PATCH /assign', ()=> {
     });
 });
 
-describe('PATCH /tags/:id', () => {
+// describe('PATCH /tags/:id', () => {
 
-    it('should assign a contact to a tag for authenticated user',(done) => {
-        var body = {
-            _contact: contacts[0]._id
-        }
-        request(app)
-        .patch(`/tags/${tags[0]._id.toHexString()}`)
-        .set('x-auth', users[0].tokens[0].token)
-        .send(body)
-        .expect(200)
-        .expect((res) => {
-            expect(res.body.tag._contact).toBe(contacts[0]._id.toHexString());
-            done();
-        })
-        .end((err, res) => {
-            if(err)
-            {
-                return done(err);
-            }
-        });
-    });
+//     it('should assign a contact to a tag for authenticated user',(done) => {
+//         var body = {
+//             _contact: contacts[0]._id
+//         }
+//         request(app)
+//         .patch(`/tags/${tags[0]._id.toHexString()}`)
+//         .set('x-auth', users[0].tokens[0].token)
+//         .send(body)
+//         .expect(200)
+//         .expect((res) => {
+//             expect(res.body.tag._contact).toBe(contacts[0]._id.toHexString());
+//             done();
+//         })
+//         .end((err, res) => {
+//             if(err)
+//             {
+//                 return done(err);
+//             }
+//         });
+//     });
 
-    it('should not assign a contact to a tag for unauthenticated user',(done) => {
-        var body = {
-            _contact: contacts[0]._id
-        }
-        request(app)
-        .patch(`/tags/${tags[0]._id.toHexString()}`)
-        .send(body)
-        .expect(401)
-        .end(done);
-    });
+//     it('should not assign a contact to a tag for unauthenticated user',(done) => {
+//         var body = {
+//             _contact: contacts[0]._id
+//         }
+//         request(app)
+//         .patch(`/tags/${tags[0]._id.toHexString()}`)
+//         .send(body)
+//         .expect(401)
+//         .end(done);
+//     });
 
-    it('should not update a tag with invalid data', (done) => {
-        var invalidTag = {
-            _contact: 'hello'
-        };
-        request(app)
-        .patch(`/tags/${tags[0]._id.toHexString()}`)
-        .set('x-auth', users[0].tokens[0].token)
-        .send(invalidTag)
-        .expect(400)
-        .end(done);
-    });
-    //TODO: it should not make a change to a tag that the user does not own
-});
+//     it('should not update a tag with invalid data', (done) => {
+//         var invalidTag = {
+//             _contact: 'hello'
+//         };
+//         request(app)
+//         .patch(`/tags/${tags[0]._id.toHexString()}`)
+//         .set('x-auth', users[0].tokens[0].token)
+//         .send(invalidTag)
+//         .expect(400)
+//         .end(done);
+//     });
+//     //TODO: it should not make a change to a tag that the user does not own
+// });
 
 describe('DELETE /tags/:id', () => {
     it('should remove a tag for authenticated user', (done) => {
