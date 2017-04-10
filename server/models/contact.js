@@ -53,6 +53,16 @@ ContactSchema.methods.findByTag = function() {
     return _.pick(contactObject,['name','phone','mobile','address','postCode','suburb','notes']);
 }
 
+// Remove references to contact from tags when a contact is deleted
+ContactSchema.pre('remove', function(next) {
+    var id = this._id.toHexString();
+
+    this.model('Tag').update({'_contact': id},{$set:{_contact: null}},{"multi": true}).then((res) => {
+        console.log(res);
+    });
+    next();
+});
+
 var Contact = mongoose.model('Contact', ContactSchema);
 
 module.exports = {Contact}
