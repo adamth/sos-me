@@ -57,9 +57,7 @@ ContactSchema.methods.findByTag = function() {
 ContactSchema.pre('remove', function(next) {
     var id = this._id.toHexString();
 
-    this.model('Tag').update({'_contact': id},{$set:{_contact: null}},{"multi": true}).then((res) => {
-        console.log(res);
-    });
+    this.model('Tag').update({'_contact': id},{$set:{_contact: null}},{"multi": true}).exec();
     next();
 });
 
