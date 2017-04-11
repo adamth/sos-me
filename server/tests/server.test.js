@@ -532,6 +532,26 @@ describe('DELETE /contacts/:id',() => {
         .expect(404)
         .end(done);
     });
+
+    it('should remove reference to deleted contact from a tag',(done) => {
+        request(app)
+        .delete(`/contacts/${hexId}`)
+        .set('x-auth', users[0].tokens[0].token)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.contact._id).toBe(hexId);
+        })
+        .end((err,res) => {
+            if(err)
+            {
+                return done(err);
+            }
+            Tag.findById(tags[0]._id).then((tag) => {
+                expect(tag._contact).toBe(null);
+                done();
+            }).catch((e) => done(e));
+        });
+    });
 });
 
 describe('GET /users/me', () => {
