@@ -71,17 +71,18 @@ router.patch('/:id', authenticate, (req,res) => {
 // DELETE contacts/
 router.delete('/:id', authenticate, (req,res) => {
     var id = req.params.id;
-    
+
     if(!ObjectID.isValid(id))
     {
         return res.sendStatus(404);
     }
     
-    Contact.findOneAndRemove({_id: id, _user: req.user._id}).then((contact) => {
+    Contact.findOne({_id: id, _user: req.user._id}).then((contact) => {
         if(!contact)
         {
-            res.sendStatus(404);
+           return res.sendStatus(404);
         }
+        contact.remove();
 
         res.send({contact});
     }).catch((e) => {
